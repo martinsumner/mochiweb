@@ -136,7 +136,7 @@ headers(Socket, Opts, Request, Headers, _Body,
 	mochiweb_socket:exit_if_closed(mochiweb_socket:setopts(Socket,
 							       [{packet,
 								 raw}])),
-    handle_invalid_request(Socket, Opts, Request, Headers);
+    handle_invalid_request(Socket, Opts, Request, Headers, 400);
 headers(Socket, Opts, Request, Headers, Body,
 	HeaderCount) ->
     ok =
@@ -184,19 +184,22 @@ handle_invalid_msg_request(Msg, Socket, Opts, Request,
 	  %% R15B02 returns this then closes the socket, so close and exit
 	  mochiweb_socket:close(Socket),
 	  exit(normal);
+      {{tcp_error, _, emsgsize}, false} ->
+      handle_invalid_request(Socket, Opts, Request,
+				 RevHeaders, 431);
       _ ->
 	  handle_invalid_request(Socket, Opts, Request,
-				 RevHeaders)
+				 RevHeaders, 400)
     end.
 
 -spec handle_invalid_request(term(), term(), term(),
-			     term()) -> no_return().
+			     term(), 400..431) -> no_return().
 
 handle_invalid_request(Socket, Opts, Request,
-		       RevHeaders) ->
+		       RevHeaders, ResponseCode) ->
     {ReqM, _} = Req = new_request(Socket, Opts, Request,
 				  RevHeaders),
-    ReqM:respond({400, [], []}, Req),
+    ReqM:respond({ResponseCode, [], []}, Req),
     mochiweb_socket:close(Socket),
     exit(normal).
 

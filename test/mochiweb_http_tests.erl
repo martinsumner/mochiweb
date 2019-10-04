@@ -47,5 +47,6 @@ has_bug(Port, Len) ->
        {{"HTTP/1.1", 200, "OK"}, _,
 	"<html><body>Hello</body></html>"}} ->
 	  false;
-      {ok, {{"HTTP/1.1", 400, "Bad Request"}, _, []}} -> false
+      {ok, {{"HTTP/1.1", 431, "Request Header Fields Too Large"}, _, []}} ->
+      false
     end.
