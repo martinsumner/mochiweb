@@ -43,16 +43,6 @@
 
 -define(DEFAULTS, [{name, ?MODULE}, {port, 8888}]).
 
--ifdef(gen_tcp_r15b_workaround).
-
-r15b_workaround() -> false.
-
--else.
-
-r15b_workaround() -> false.
-
--endif.
-
 parse_options(Options) ->
     {loop, HttpLoop} = proplists:lookup(loop, Options),
     Loop = {?MODULE, loop, [HttpLoop]},
@@ -85,8 +75,8 @@ start_link(Options) ->
 
 ensure_started(M) when is_atom(M) ->
     case M:start() of
-      {ok, _Pid} -> ok;
-      {error, {already_started, _Pid}} -> ok
+        {ok, _Pid} -> ok;
+        {error, {already_started, _Pid}} -> ok
     end.
 
 loop(Socket, Opts, Body) ->
@@ -176,21 +166,9 @@ handle_invalid_msg_request(Msg, Socket, Opts) ->
 
 -spec handle_invalid_msg_request(term(), term(), term(),
 				 term(), term()) -> no_return().
-
-handle_invalid_msg_request(Msg, Socket, Opts, Request,
+handle_invalid_msg_request({tcp_error, _, emsgsize}, Socket, Opts, Request,
 			   RevHeaders) ->
-    case {Msg, r15b_workaround()} of
-      {{tcp_error, _, emsgsize}, true} ->
-	  %% R15B02 returns this then closes the socket, so close and exit
-	  mochiweb_socket:close(Socket),
-	  exit(normal);
-      {{tcp_error, _, emsgsize}, false} ->
-      handle_invalid_request(Socket, Opts, Request,
-				 RevHeaders, 431);
-      _ ->
-	  handle_invalid_request(Socket, Opts, Request,
-				 RevHeaders, 400)
-    end.
+    handle_invalid_request(Socket, Opts, Request, RevHeaders, 431).
 
 -spec handle_invalid_request(term(), term(), term(),
 			     term(), 400..431) -> no_return().

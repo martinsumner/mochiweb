@@ -5,8 +5,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 ssl_cert_opts() ->
-    EbinDir = filename:dirname(code:which(?MODULE)),
-    CertDir = filename:join([EbinDir, "..", "support", "test-materials"]),
+    CertDir = filename:join(["support", "test-materials"]),
     CertFile = filename:join(CertDir, "test_ssl_cert.pem"),
     KeyFile = filename:join(CertDir, "test_ssl_key.pem"),
     [{certfile, CertFile}, {keyfile, KeyFile}].
